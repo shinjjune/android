@@ -22,23 +22,53 @@ class MainActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        data.add(Todo("숙제",false))
-        data.add(Todo("청소",false))
+        data.add(Todo("숙제", false))
+        data.add(Todo("청소", false))
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        binding.recyclerView.adapter = TodoAdapter(data)
+        binding.recyclerView.adapter = TodoAdapter(data,
+            onClickDeleteIcon = {
+                deleteTodo(it)
+            }
+        )
+
+        binding.addButton.setOnClickListener {
+            addTodo()
+        }
     }
+
+    private fun addTodo() {
+        val todo = Todo(binding.editText.text.toString())
+        data.add(todo)
+        binding.recyclerView.adapter?.notifyDataSetChanged()
+    }
+
+    private fun deleteTodo(todo: Todo) {
+        data.remove(todo)
+        binding.recyclerView.adapter?.notifyDataSetChanged()
+
+    }
+
 }
 
-data class Todo(val text: String, var isDone: Boolean)
+data class Todo(
+    val text: String,
+    var isDone: Boolean = false
 
-class TodoAdapter(private val myDataset: List<Todo>) :
+)
+
+class TodoAdapter(
+    private val myDataset: List<Todo>,
+    val onClickDeleteIcon: (todo: Todo) -> Unit
+) :
     RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
 
     class TodoViewHolder(val binding: ItemTodoBinding) : RecyclerView.ViewHolder(binding.root)
 
-    override fun onCreateViewHolder(parent: ViewGroup,
-                                    viewType: Int): TodoAdapter.TodoViewHolder {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): TodoAdapter.TodoViewHolder {
 
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_todo, parent, false)
@@ -46,7 +76,11 @@ class TodoAdapter(private val myDataset: List<Todo>) :
     }
 
     override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
-        holder.binding.todoText.text = myDataset[position].text
+        val todo = myDataset[position]
+        holder.binding.todoText.text = todo.text
+        holder.binding.deleteImageView.setOnClickListener {
+            onClickDeleteIcon.invoke(todo)
+        }
     }
 
     override fun getItemCount() = myDataset.size
