@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.shinjjune.Todo_list.databinding.ActivityMainBinding
 import com.shinjjune.Todo_list.databinding.ItemTodoBinding
 import java.lang.reflect.Type
@@ -73,7 +75,7 @@ class MainActivity : AppCompatActivity() {
 
             if (resultCode == Activity.RESULT_OK) {
                 // Successfully signed in
-                val user = FirebaseAuth.getInstance().currentUser
+                viewModel.fetchData()
                 // ...
             } else {
                 // 로그인 실패
@@ -111,8 +113,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId){
-            R.id.action_log_out ->{
+        return when (item.itemId) {
+            R.id.action_log_out -> {
                 logout()
                 true
             }
@@ -181,9 +183,31 @@ class TodoAdapter(
 }
 
 class MainViewModel : ViewModel() {
+    val db = Firebase.firestore
+
     val todoLiveData = MutableLiveData<List<Todo>>()
 
     val data = arrayListOf<Todo>()
+
+    init {
+        fetchData()
+    }
+
+    fun fetchData() {
+        db.collection("q4G9CKVKq3bAGy09SLCS50nfjHq1")
+            .get()
+            .addOnSuccessListener { result ->
+                data.clear()
+                for (document in result) {
+                    val todo = Todo(
+                        document.data.get("text") as String,
+                        document.data.get("isDone") as Boolean
+                    )
+                    data.add(todo)
+                }
+                todoLiveData.value = data
+            }
+    }
 
     fun toggleTodo(todo: Todo) {
         todo.isDone = !todo.isDone
