@@ -203,7 +203,7 @@ class MainViewModel : ViewModel() {
                     if (e != null) {
                         return@addSnapshotListener
                     }
-                    if(value != null){
+                    if (value != null) {
                         todoLiveData.value = value.documents
                     }
 
@@ -211,38 +211,28 @@ class MainViewModel : ViewModel() {
                     for (document in value!!) {
                         data.add(document)
                     }
-                    todoLiveData.value = data
+                    if (value != null) {
+                        todoLiveData.value = data
+                    }
                 }
-
-
-//                .get()
-//                .addOnSuccessListener { result ->
-//                    data.clear()
-//                    for (document in result) {
-//                        val todo = Todo(
-//                            document.data.get("text") as String,
-//                            document.data.get("isDone") as Boolean
-//                        )
-//                        data.add(todo)
-//                    }
-//                    todoLiveData.value = data
-//                }
         }
     }
 
     fun toggleTodo(todo: DocumentSnapshot) {
-//        todo.isDone = !todo.isDone
-//        todoLiveData.value = data
+        FirebaseAuth.getInstance().currentUser?.let { user ->
+            val isDone = todo.getBoolean("isDone") ?: false
+            db.collection(user.uid).document(todo.id).update("isDone", !isDone)
+        }
     }
 
     fun addTodo(todo: Todo) {
-        FirebaseAuth.getInstance().currentUser?. let {user ->
+        FirebaseAuth.getInstance().currentUser?.let { user ->
             db.collection(user.uid).add(todo)
         }
     }
 
     fun deleteTodo(todo: DocumentSnapshot) {
-        FirebaseAuth.getInstance().currentUser?. let {user ->
+        FirebaseAuth.getInstance().currentUser?.let { user ->
             db.collection(user.uid).document(todo.id).delete()
         }
     }
