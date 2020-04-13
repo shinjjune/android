@@ -194,19 +194,39 @@ class MainViewModel : ViewModel() {
     }
 
     fun fetchData() {
-        db.collection("q4G9CKVKq3bAGy09SLCS50nfjHq1")
-            .get()
-            .addOnSuccessListener { result ->
-                data.clear()
-                for (document in result) {
-                    val todo = Todo(
-                        document.data.get("text") as String,
-                        document.data.get("isDone") as Boolean
-                    )
-                    data.add(todo)
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            db.collection(user.uid)
+                .addSnapshotListener { value, e ->
+                    if (e != null) {
+                        return@addSnapshotListener
+                    }
+
+                    data.clear()
+                    for (document in value!!) {
+                        val todo = Todo(
+                            document.getString("text") ?: "",
+                            document.getBoolean("isDone") ?: false
+                        )
+                        data.add(todo)
+                    }
+                    todoLiveData.value = data
                 }
-                todoLiveData.value = data
-            }
+
+
+//                .get()
+//                .addOnSuccessListener { result ->
+//                    data.clear()
+//                    for (document in result) {
+//                        val todo = Todo(
+//                            document.data.get("text") as String,
+//                            document.data.get("isDone") as Boolean
+//                        )
+//                        data.add(todo)
+//                    }
+//                    todoLiveData.value = data
+//                }
+        }
     }
 
     fun toggleTodo(todo: Todo) {
@@ -215,8 +235,9 @@ class MainViewModel : ViewModel() {
     }
 
     fun addTodo(todo: Todo) {
-        data.add(todo)
-        todoLiveData.value = data
+        FirebaseAuth.getInstance().currentUser?. let {user ->
+            db.collection(user.uid).add(todo)
+        }
     }
 
     fun deleteTodo(todo: Todo) {
